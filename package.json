@@ -28,11 +28,15 @@
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w",
-    "prepublishOnly": "npm run build && node test/assets.js"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test && node test/assets.js"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "rollup": "^4.54.0"
+    "happy-dom": "^20.10.6",
+    "rollup": "^4.54.0",
+    "vitest": "^4.1.9"
   }
 }
