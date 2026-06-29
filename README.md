@@ -66,13 +66,17 @@ You can pass the following options into domPanZoom:
 | Option | Default |  |
 | --- | --- | --- |
 | `center` | `true` | Start with a centered position. This option overrides `initalPanX` and `initialPanY` |
-| `bounds` | `cover` | Set this option to `'contain'` or `'cover'` to limit the boundries of the panZoomElement to the wrapperElement. This works similar to the CSS property background-size: contain / cover. Setting this option might effect the option minZoom |
+| `bounds` | `'contain'` | Set this option to `'contain'` or `'cover'` to limit the boundries of the panZoomElement to the wrapperElement. This works similar to the CSS property background-size: contain / cover. Setting this option might effect the option minZoom |
 | `minZoom` | `0.1` | Minimum zoom, `0.5` would be half the original size |
 | `maxZoom` | `10` | Maximum zoom, `2` would be double the original size |
+| `panEnabled` | `true` | Allow user drag/touch panning |
+| `zoomEnabled` | `true` | Allow user wheel/pinch/double-click zooming |
 | `panStep` | `10` | How many percent to pan by default with the panning methods panLeft, panRight, panUp and panDown |
 | `zoomStep` | `50` | How many percent to zoom by default with the methods zoomIn and zoomOut |
-| `zoomWheelSpeed` | `1` | The speed in which to zoom when using the mouse wheel |
-| `initialZoom` | `1` | Initial zoom level |
+| `zoomSpeedWheel` | `1` | The speed in which to zoom when using the mouse wheel |
+| `mouseWheelRequiresKey` | `false` | When `true`, wheel zoom requires alt, control, meta, or shift. Pass a function for custom checks |
+| `dblClickZoomEnabled` | `false` | Zoom in at the cursor position on double-click |
+| `initialZoom` | `'contain'` | Initial zoom level, or `'contain'` / `'cover'` to fit bounds |
 | `initialPanX` | `0` | Initial horizontal pan in percent |
 | `initialPanY` | `0` | Initial vertical pan in percent |
 | `transitionSpeed` | `400` | Transition speed in milliseconds, higher values are slower |
@@ -108,6 +112,9 @@ You can use the following methods:
 | `.center()` | Pan to centered position. Pass `true` to center instantly, e.g. `.center(true)` |
 | `.zoomIn()`<br>`.zoomOut()` | Zoom in and out. You can pass a number to zoom a specific amount (in percent). Pass `true` as first or second argument to zoom instantly, e.g. `.zoomIn(20)`, `.zoomIn(true)`, `.zoomIn(50, true)` |
 | `.zoomTo(2)` | Zoom to a specific zoom level. Pass `true` as a second argument to zoom instantly, e.g. `.zoomTo(2, true)` |
+| `.zoomToAt(2, { x: 100, y: 50 })` | Zoom to a level while keeping a content point fixed. Pass `{ x, y, percent: true }` for percent coordinates. Pass `true` as third argument to zoom instantly |
+| `.reset()` | Reset to the initial zoom and pan. Pass `true` for instant reset, or an options object with `zoom`, `panX`, `panY`, `center`, and `instant` |
+| `.resize()` | Recalculate bounds after the wrapper or panZoom element changes size |
 
 ### E.g.
 
