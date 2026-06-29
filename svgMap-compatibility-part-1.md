@@ -112,6 +112,19 @@ zoomToAt(1.9, { x: 22.7, y: 25, percent: true }) // percent of content size
 
 ---
 
+## 8. `destroy()` (`e22e43c`)
+
+**Problem:** Creating a new domPanZoom on the same wrapper without cleanup stacked event listeners. Options on the new instance (e.g. `zoomEnabled: false`) appeared ignored because old handlers still ran.
+
+**What changed:**
+
+- **`destroy()`** — removes all wrapper and document event listeners attached by the instance.
+- Safe to call multiple times; returns the instance for chaining.
+
+**Why it matters for svgMap:** Required when re-initing pan/zoom on the same map DOM (e.g. option changes, SPA remounts, or test harnesses that call Apply). svgMap should call `this.mapPanZoom.destroy()` before replacing the instance if map creation runs more than once on the same elements.
+
+---
+
 ## Summary: svg-pan-zoom → dom-pan-zoom mapping
 
 | svgMap / svg-pan-zoom | dom-pan-zoom (Phase 1) |
@@ -123,6 +136,7 @@ zoomToAt(1.9, { x: 22.7, y: 25, percent: true }) // percent of content size
 | `panEnabled` / `zoomEnabled` | same option names |
 | `mouseWheelZoomWithKey` | `mouseWheelRequiresKey: () => …` |
 | `dblClickZoomEnabled` | same option name |
+| Re-init on same DOM | `destroy()` before `new domPanZoom(...)` |
 
 ---
 

@@ -115,6 +115,7 @@ You can use the following methods:
 | `.zoomToAt(2, { x: 100, y: 50 })` | Zoom to a level while keeping a content point fixed. Pass `{ x, y, percent: true }` for percent coordinates. Pass `true` as third argument to zoom instantly |
 | `.reset()` | Reset to the initial zoom and pan. Pass `true` for instant reset, or an options object with `zoom`, `panX`, `panY`, `center`, and `instant` |
 | `.resize()` | Recalculate bounds after the wrapper or panZoom element changes size |
+| `.destroy()` | Remove all event listeners. Call before creating a new instance on the same wrapper and panZoom element |
 
 ### E.g.
 
@@ -125,6 +126,20 @@ var myDomPanZoom = new domPanZoom({
 });
 
 myDomPanZoom.panTo(20, 80);
+```
+
+### Replacing an instance
+
+If you create a new domPanZoom on the same DOM elements, call `destroy()` on the old instance first. Otherwise event listeners stack up and options on the new instance (such as `zoomEnabled`) may appear to be ignored.
+
+```javascript
+myDomPanZoom.destroy();
+
+myDomPanZoom = new domPanZoom({
+  wrapperElement: '#my-wrapper',
+  panZoomElement: '#my-container',
+  zoomEnabled: false
+});
 ```
 
 ---
