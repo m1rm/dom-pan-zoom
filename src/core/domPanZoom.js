@@ -33,6 +33,9 @@ export default class domPanZoom {
       // The speed in which to zoom when using mouse wheel
       zoomSpeedWheel: 1,
 
+      // When true or a function, require a modifier key before wheel zoom
+      mouseWheelRequiresKey: false,
+
       // The speed in which to zoom when pinching with touch gestures
       // TODO this seems to not work correctly
       zoomSpeedPinch: 4,
@@ -121,6 +124,18 @@ export default class domPanZoom {
     }
 
     wrapper.style.cursor = this.options.panEnabled ? 'grab' : null;
+  }
+
+  // Check whether wheel zoom is allowed for the current event
+  isMouseWheelZoomAllowed(ev) {
+    const requirement = this.options.mouseWheelRequiresKey;
+    if (!requirement) {
+      return true;
+    }
+    if (typeof requirement === 'function') {
+      return requirement(ev);
+    }
+    return ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey;
   }
 
   // Fire an event from the options
@@ -256,6 +271,10 @@ export default class domPanZoom {
     // Mouse wheel events
     const mouseWheelEvent = (ev) => {
       if (!this.options.zoomEnabled) {
+        return;
+      }
+
+      if (!this.isMouseWheelZoomAllowed(ev)) {
         return;
       }
 
