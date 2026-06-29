@@ -421,6 +421,32 @@ export default class domPanZoom {
     };
   }
 
+  // Get the offset for zooming while keeping a content point fixed on screen
+  getContentPointOffsetToCenter(contentX, contentY) {
+    const wrapper = this.getWrapper();
+    const container = this.getContainer();
+    const diffX = wrapper.clientWidth - container.clientWidth;
+    const diffY = wrapper.clientHeight - container.clientHeight;
+    const centerX = diffX * 0.5;
+    const centerY = diffY * 0.5;
+
+    const pointInWrapperX = container.offsetLeft + contentX;
+    const pointInWrapperY = container.offsetTop + contentY;
+
+    const offsetToCenter = {
+      x: (wrapper.clientWidth / 2 - pointInWrapperX) * -1,
+      y: (wrapper.clientHeight / 2 - pointInWrapperY) * -1
+    };
+
+    const offsetX = this.x - centerX - offsetToCenter.x;
+    const offsetY = this.y - centerY - offsetToCenter.y;
+
+    return {
+      x: offsetX,
+      y: offsetY
+    };
+  }
+
   // Get the distance between two touch events
   getTouchEventsDistance(ev1, ev2) {
     return Math.abs(Math.hypot(ev1.pageX - ev1.pageX, ev1.pageY - ev2.pageY));
@@ -605,6 +631,30 @@ export default class domPanZoom {
     this.fireEvent('onZoom', this.getPosition());
 
     // Return instance
+    return this;
+  }
+
+  // Zoom to a level while keeping a content point fixed on screen
+  zoomToAt(zoom, point, instant) {
+    zoom = this.sanitizeZoom(zoom);
+
+    const container = this.getContainer();
+    const contentX = point.percent
+      ? (point.x / 100) * container.clientWidth
+      : point.x;
+    const contentY = point.percent
+      ? (point.y / 100) * container.clientHeight
+      : point.y;
+
+    const offsetToCenter = this.getContentPointOffsetToCenter(
+      contentX,
+      contentY
+    );
+    this.adjustPositionByZoom(zoom, offsetToCenter.x, offsetToCenter.y);
+    this.zoom = zoom;
+    this.setPosition(instant);
+
+    this.fireEvent('onZoom', this.getPosition());
     return this;
   }
 
