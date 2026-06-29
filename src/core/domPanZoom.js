@@ -434,6 +434,52 @@ export default class domPanZoom {
         });
       }
     );
+
+    this._handlers = {
+      setPositionEvent,
+      mouseDownTouchStartEvent,
+      mouseUpTouchEndEvent,
+      mouseWheelEvent,
+      doubleClickEvent,
+      pointerDownEvent,
+      pointerMoveEvent,
+      pointerUpEvent
+    };
+  }
+
+  // Remove event listeners so the instance can be replaced safely
+  destroy() {
+    if (this._destroyed) {
+      return this;
+    }
+
+    const wrapper = this.getWrapper();
+    const handlers = this._handlers;
+
+    if (wrapper && handlers) {
+      wrapper.removeEventListener('mousedown', handlers.mouseDownTouchStartEvent);
+      wrapper.removeEventListener('touchstart', handlers.mouseDownTouchStartEvent);
+      wrapper.removeEventListener('wheel', handlers.mouseWheelEvent);
+      wrapper.removeEventListener('dblclick', handlers.doubleClickEvent);
+      wrapper.removeEventListener('pointerdown', handlers.pointerDownEvent);
+      wrapper.removeEventListener('pointermove', handlers.pointerMoveEvent);
+
+      ['pointerup', 'pointercancel', 'pointerout', 'pointerleave'].forEach(
+        (event) => {
+          wrapper.removeEventListener(event, handlers.pointerUpEvent);
+        }
+      );
+    }
+
+    if (handlers) {
+      document.removeEventListener('mouseup', handlers.mouseUpTouchEndEvent);
+      document.removeEventListener('touchend', handlers.mouseUpTouchEndEvent);
+      document.removeEventListener('mousemove', handlers.setPositionEvent);
+      document.removeEventListener('touchmove', handlers.setPositionEvent);
+    }
+
+    this._destroyed = true;
+    return this;
   }
 
   // https://stackoverflow.com/questions/8389156/what-substitute-should-we-use-for-layerx-layery-since-they-are-deprecated-in-web

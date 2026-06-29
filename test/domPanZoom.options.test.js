@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import domPanZoom from '../src/index.js';
 import { createFixture, dispatchWheel } from './helpers.js';
 
 describe('domPanZoom options', () => {
@@ -122,5 +123,29 @@ describe('domPanZoom options', () => {
     );
 
     expect(instance.getZoom()).toBe(1);
+  });
+
+  it('destroy removes listeners so a replaced instance respects new options', () => {
+    const { wrapper, content, instance: first } = setup({
+      zoomEnabled: true,
+      initialZoom: 1
+    });
+
+    first.destroy();
+
+    const second = new domPanZoom({
+      wrapperElement: wrapper,
+      panZoomElement: content,
+      bounds: false,
+      initialZoom: 1,
+      center: true,
+      transitionSpeed: 0,
+      zoomEnabled: false
+    });
+
+    dispatchWheel(wrapper, { deltaY: -120 });
+
+    expect(second.getZoom()).toBe(1);
+    second.destroy();
   });
 });

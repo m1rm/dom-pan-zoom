@@ -55,6 +55,7 @@ export function createFixture(options = {}) {
     content,
     instance,
     destroy() {
+      instance.destroy();
       wrapper.remove();
     }
   };
