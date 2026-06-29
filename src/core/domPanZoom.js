@@ -86,30 +86,10 @@ export default class domPanZoom {
     // Attach events
     this.attachEvents();
 
-    // Adjust minZoom for option bounds
-    if (this.options.bounds) {
-      const maxWidth = wrapper.clientWidth;
-      const maxHeight = wrapper.clientHeight;
-
-      const panZoomWidth = container.clientWidth;
-      const panZoomHeight = container.clientHeight;
-
-      const minZoomX = maxWidth / panZoomWidth;
-      const minZoomY = maxHeight / panZoomHeight;
-
-      if (this.options.bounds == 'cover') {
-        this.options.minZoom = Math.max(
-          this.options.minZoom,
-          minZoomX,
-          minZoomY
-        );
-      } else {
-        this.options.minZoom = Math.max(
-          this.options.minZoom,
-          Math.min(minZoomX, minZoomY)
-        );
-      }
-    }
+    // Store base zoom limits before bounds adjustment
+    this.baseMinZoom = this.options.minZoom;
+    this.baseMaxZoom = this.options.maxZoom;
+    this.adjustMinZoomForBounds();
 
     // Set initial zoom
     this.zoom = this.sanitizeZoom(this.options.initialZoom);
@@ -132,6 +112,56 @@ export default class domPanZoom {
   // Fire an event from the options
   fireEvent(event, pass) {
     this.options[event] && this.options[event].bind(this)(pass);
+  }
+
+  // Recalculate minZoom from bounds and the configured base minZoom
+  adjustMinZoomForBounds() {
+    this.options.minZoom = this.baseMinZoom;
+    this.options.maxZoom = this.baseMaxZoom;
+
+    if (!this.options.bounds) {
+      return;
+    }
+
+    const wrapper = this.getWrapper();
+    const container = this.getContainer();
+    if (!wrapper || !container) {
+      return;
+    }
+
+    const maxWidth = wrapper.clientWidth;
+    const maxHeight = wrapper.clientHeight;
+    const panZoomWidth = container.clientWidth;
+    const panZoomHeight = container.clientHeight;
+
+    if (!panZoomWidth || !panZoomHeight) {
+      return;
+    }
+
+    const minZoomX = maxWidth / panZoomWidth;
+    const minZoomY = maxHeight / panZoomHeight;
+
+    if (this.options.bounds == 'cover') {
+      this.options.minZoom = Math.max(
+        this.options.minZoom,
+        minZoomX,
+        minZoomY
+      );
+    } else {
+      this.options.minZoom = Math.max(
+        this.options.minZoom,
+        Math.min(minZoomX, minZoomY)
+      );
+    }
+  }
+
+  // Recalculate bounds after the wrapper or panZoom element changes size
+  resize() {
+    const zoom = this.zoom;
+    this.adjustMinZoomForBounds();
+    this.zoom = this.sanitizeZoom(zoom);
+    this.setPosition(true);
+    return this;
   }
 
   // Attach events
