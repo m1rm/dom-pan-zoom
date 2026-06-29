@@ -36,6 +36,9 @@ export default class domPanZoom {
       // When true or a function, require a modifier key before wheel zoom
       mouseWheelRequiresKey: false,
 
+      // Zoom in on double-click
+      dblClickZoomEnabled: false,
+
       // The speed in which to zoom when pinching with touch gestures
       // TODO this seems to not work correctly
       zoomSpeedPinch: 4,
@@ -307,6 +310,26 @@ export default class domPanZoom {
     };
 
     this.getWrapper().addEventListener('wheel', mouseWheelEvent, {
+      passive: false
+    });
+
+    const doubleClickEvent = (ev) => {
+      if (!this.options.dblClickZoomEnabled || !this.options.zoomEnabled) {
+        return;
+      }
+
+      ev.preventDefault();
+
+      const zoomStep = (100 + this.options.zoomStep) / 100;
+      const nextZoom = this.sanitizeZoom(this.zoom * zoomStep);
+      const offsetToCenter = this.getEventOffsetToCenter(ev);
+      this.adjustPositionByZoom(nextZoom, offsetToCenter.x, offsetToCenter.y);
+      this.zoom = nextZoom;
+      this.setPosition(true);
+      this.fireEvent('onZoom', this.getPosition());
+    };
+
+    this.getWrapper().addEventListener('dblclick', doubleClickEvent, {
       passive: false
     });
 
