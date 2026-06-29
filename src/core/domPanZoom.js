@@ -126,7 +126,7 @@ export default class domPanZoom {
       return;
     }
 
-    wrapper.style.cursor = this.options.panEnabled ? 'grab' : null;
+    wrapper.style.cursor = this.options.panEnabled ? 'grab' : '';
   }
 
   // Check whether wheel zoom is allowed for the current event
@@ -743,7 +743,7 @@ export default class domPanZoom {
 
     // Calculate nextZoom
     const currentZoom = this.zoom;
-    const zoomStep = (100 + step) / 100;
+    let zoomStep = (100 + step) / 100;
     if (direction === 'out') {
       zoomStep = 1 / zoomStep;
     }
