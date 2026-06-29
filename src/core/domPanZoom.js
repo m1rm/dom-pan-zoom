@@ -546,6 +546,48 @@ export default class domPanZoom {
     return this.zoom;
   }
 
+  // Reset to the initial zoom and pan position
+  reset(arg) {
+    let instant = false;
+    let zoom = this.options.initialZoom;
+    let panX = this.options.initialPanX;
+    let panY = this.options.initialPanY;
+    let useCenter = this.options.center;
+
+    if (typeof arg === 'boolean') {
+      instant = arg;
+    } else if (arg && typeof arg === 'object') {
+      instant = arg.instant === true;
+      if (arg.zoom !== undefined) {
+        zoom = arg.zoom;
+      }
+      if (arg.panX !== undefined) {
+        panX = arg.panX;
+        useCenter = false;
+      }
+      if (arg.panY !== undefined) {
+        panY = arg.panY;
+        useCenter = false;
+      }
+      if (arg.center !== undefined) {
+        useCenter = arg.center;
+      }
+    }
+
+    this.zoom = this.sanitizeZoom(zoom);
+
+    if (useCenter) {
+      this.center(true, true);
+    } else {
+      this.panTo(panX, panY, true, true);
+    }
+
+    this.setPosition(instant);
+    this.fireEvent('onZoom', this.getPosition());
+    this.fireEvent('onPan', this.getPosition());
+    return this;
+  }
+
   // Zoom to
   zoomTo(zoom, instant) {
     // Sanitize zoom
