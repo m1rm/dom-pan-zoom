@@ -20,6 +20,10 @@ export default class domPanZoom {
       minZoom: 0.1,
       maxZoom: 10,
 
+      // Enable or disable user panning and zooming
+      panEnabled: true,
+      zoomEnabled: true,
+
       // How many percent to pan by default with the panning methods panLeft, panRight, panUp and panDown
       panStep: 10,
 
@@ -75,7 +79,7 @@ export default class domPanZoom {
     const container = this.getContainer();
 
     // Add styles
-    wrapper.style.cursor = 'grab';
+    this.updateInteractionCursor();
     wrapper.style.overflow = 'hidden';
 
     // Cache
@@ -107,6 +111,16 @@ export default class domPanZoom {
 
     // Trigger event
     this.fireEvent('onInit', this.getPosition());
+  }
+
+  // Update the wrapper cursor based on panEnabled
+  updateInteractionCursor() {
+    const wrapper = this.getWrapper();
+    if (!wrapper) {
+      return;
+    }
+
+    wrapper.style.cursor = this.options.panEnabled ? 'grab' : null;
   }
 
   // Fire an event from the options
@@ -168,7 +182,7 @@ export default class domPanZoom {
   attachEvents() {
     // Event while mouse moving
     const setPositionEvent = (ev) => {
-      if (this.blockPan == true) {
+      if (this.blockPan == true || !this.options.panEnabled) {
         return;
       }
 
@@ -197,6 +211,10 @@ export default class domPanZoom {
 
     // Mouse down or touchstart event
     const mouseDownTouchStartEvent = (ev) => {
+      if (!this.options.panEnabled) {
+        return;
+      }
+
       ev.preventDefault();
       document.body.style.cursor = 'grabbing';
       this.getWrapper().style.cursor = 'grabbing';
@@ -219,7 +237,7 @@ export default class domPanZoom {
     const mouseUpTouchEndEvent = () => {
       this.previousEvent = null;
       document.body.style.cursor = null;
-      this.getWrapper().style.cursor = 'grab';
+      this.updateInteractionCursor();
       document.removeEventListener('mousemove', setPositionEvent, {
         passive: true
       });
@@ -237,6 +255,10 @@ export default class domPanZoom {
 
     // Mouse wheel events
     const mouseWheelEvent = (ev) => {
+      if (!this.options.zoomEnabled) {
+        return;
+      }
+
       ev.preventDefault();
 
       // Delta
@@ -302,7 +324,7 @@ export default class domPanZoom {
       }
 
       // Proceed if two touch gestures detected
-      if (this.evCache.length == 2) {
+      if (this.evCache.length == 2 && this.options.zoomEnabled) {
         // Calculate distance between fingers
         let pinchDiff = this.getTouchEventsDistance(
           this.evCache[0],
