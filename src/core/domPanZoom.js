@@ -20,6 +20,10 @@ export default class domPanZoom {
       minZoom: 0.1,
       maxZoom: 10,
 
+      // Enable or disable user panning and zooming
+      panEnabled: true,
+      zoomEnabled: true,
+
       // How many percent to pan by default with the panning methods panLeft, panRight, panUp and panDown
       panStep: 10,
 
@@ -28,6 +32,12 @@ export default class domPanZoom {
 
       // The speed in which to zoom when using mouse wheel
       zoomSpeedWheel: 1,
+
+      // When true or a function, require a modifier key before wheel zoom
+      mouseWheelRequiresKey: false,
+
+      // Zoom in on double-click
+      dblClickZoomEnabled: false,
 
       // The speed in which to zoom when pinching with touch gestures
       // TODO this seems to not work correctly
@@ -75,7 +85,7 @@ export default class domPanZoom {
     const container = this.getContainer();
 
     // Add styles
-    wrapper.style.cursor = 'grab';
+    this.updateInteractionCursor();
     wrapper.style.overflow = 'hidden';
 
     // Cache
@@ -86,30 +96,10 @@ export default class domPanZoom {
     // Attach events
     this.attachEvents();
 
-    // Adjust minZoom for option bounds
-    if (this.options.bounds) {
-      const maxWidth = wrapper.clientWidth;
-      const maxHeight = wrapper.clientHeight;
-
-      const panZoomWidth = container.clientWidth;
-      const panZoomHeight = container.clientHeight;
-
-      const minZoomX = maxWidth / panZoomWidth;
-      const minZoomY = maxHeight / panZoomHeight;
-
-      if (this.options.bounds == 'cover') {
-        this.options.minZoom = Math.max(
-          this.options.minZoom,
-          minZoomX,
-          minZoomY
-        );
-      } else {
-        this.options.minZoom = Math.max(
-          this.options.minZoom,
-          Math.min(minZoomX, minZoomY)
-        );
-      }
-    }
+    // Store base zoom limits before bounds adjustment
+    this.baseMinZoom = this.options.minZoom;
+    this.baseMaxZoom = this.options.maxZoom;
+    this.adjustMinZoomForBounds();
 
     // Set initial zoom
     this.zoom = this.sanitizeZoom(this.options.initialZoom);
@@ -129,16 +119,88 @@ export default class domPanZoom {
     this.fireEvent('onInit', this.getPosition());
   }
 
+  // Update the wrapper cursor based on panEnabled
+  updateInteractionCursor() {
+    const wrapper = this.getWrapper();
+    if (!wrapper) {
+      return;
+    }
+
+    wrapper.style.cursor = this.options.panEnabled ? 'grab' : '';
+  }
+
+  // Check whether wheel zoom is allowed for the current event
+  isMouseWheelZoomAllowed(ev) {
+    const requirement = this.options.mouseWheelRequiresKey;
+    if (!requirement) {
+      return true;
+    }
+    if (typeof requirement === 'function') {
+      return requirement(ev);
+    }
+    return ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey;
+  }
+
   // Fire an event from the options
   fireEvent(event, pass) {
     this.options[event] && this.options[event].bind(this)(pass);
+  }
+
+  // Recalculate minZoom from bounds and the configured base minZoom
+  adjustMinZoomForBounds() {
+    this.options.minZoom = this.baseMinZoom;
+    this.options.maxZoom = this.baseMaxZoom;
+
+    if (!this.options.bounds) {
+      return;
+    }
+
+    const wrapper = this.getWrapper();
+    const container = this.getContainer();
+    if (!wrapper || !container) {
+      return;
+    }
+
+    const maxWidth = wrapper.clientWidth;
+    const maxHeight = wrapper.clientHeight;
+    const panZoomWidth = container.clientWidth;
+    const panZoomHeight = container.clientHeight;
+
+    if (!panZoomWidth || !panZoomHeight) {
+      return;
+    }
+
+    const minZoomX = maxWidth / panZoomWidth;
+    const minZoomY = maxHeight / panZoomHeight;
+
+    if (this.options.bounds == 'cover') {
+      this.options.minZoom = Math.max(
+        this.options.minZoom,
+        minZoomX,
+        minZoomY
+      );
+    } else {
+      this.options.minZoom = Math.max(
+        this.options.minZoom,
+        Math.min(minZoomX, minZoomY)
+      );
+    }
+  }
+
+  // Recalculate bounds after the wrapper or panZoom element changes size
+  resize() {
+    const zoom = this.zoom;
+    this.adjustMinZoomForBounds();
+    this.zoom = this.sanitizeZoom(zoom);
+    this.setPosition(true);
+    return this;
   }
 
   // Attach events
   attachEvents() {
     // Event while mouse moving
     const setPositionEvent = (ev) => {
-      if (this.blockPan == true) {
+      if (this.blockPan == true || !this.options.panEnabled) {
         return;
       }
 
@@ -167,6 +229,10 @@ export default class domPanZoom {
 
     // Mouse down or touchstart event
     const mouseDownTouchStartEvent = (ev) => {
+      if (!this.options.panEnabled) {
+        return;
+      }
+
       ev.preventDefault();
       document.body.style.cursor = 'grabbing';
       this.getWrapper().style.cursor = 'grabbing';
@@ -189,7 +255,7 @@ export default class domPanZoom {
     const mouseUpTouchEndEvent = () => {
       this.previousEvent = null;
       document.body.style.cursor = null;
-      this.getWrapper().style.cursor = 'grab';
+      this.updateInteractionCursor();
       document.removeEventListener('mousemove', setPositionEvent, {
         passive: true
       });
@@ -207,6 +273,14 @@ export default class domPanZoom {
 
     // Mouse wheel events
     const mouseWheelEvent = (ev) => {
+      if (!this.options.zoomEnabled) {
+        return;
+      }
+
+      if (!this.isMouseWheelZoomAllowed(ev)) {
+        return;
+      }
+
       ev.preventDefault();
 
       // Delta
@@ -236,6 +310,26 @@ export default class domPanZoom {
     };
 
     this.getWrapper().addEventListener('wheel', mouseWheelEvent, {
+      passive: false
+    });
+
+    const doubleClickEvent = (ev) => {
+      if (!this.options.dblClickZoomEnabled || !this.options.zoomEnabled) {
+        return;
+      }
+
+      ev.preventDefault();
+
+      const zoomStep = (100 + this.options.zoomStep) / 100;
+      const nextZoom = this.sanitizeZoom(this.zoom * zoomStep);
+      const offsetToCenter = this.getEventOffsetToCenter(ev);
+      this.adjustPositionByZoom(nextZoom, offsetToCenter.x, offsetToCenter.y);
+      this.zoom = nextZoom;
+      this.setPosition(true);
+      this.fireEvent('onZoom', this.getPosition());
+    };
+
+    this.getWrapper().addEventListener('dblclick', doubleClickEvent, {
       passive: false
     });
 
@@ -272,7 +366,7 @@ export default class domPanZoom {
       }
 
       // Proceed if two touch gestures detected
-      if (this.evCache.length == 2) {
+      if (this.evCache.length == 2 && this.options.zoomEnabled) {
         // Calculate distance between fingers
         let pinchDiff = this.getTouchEventsDistance(
           this.evCache[0],
@@ -340,6 +434,52 @@ export default class domPanZoom {
         });
       }
     );
+
+    this._handlers = {
+      setPositionEvent,
+      mouseDownTouchStartEvent,
+      mouseUpTouchEndEvent,
+      mouseWheelEvent,
+      doubleClickEvent,
+      pointerDownEvent,
+      pointerMoveEvent,
+      pointerUpEvent
+    };
+  }
+
+  // Remove event listeners so the instance can be replaced safely
+  destroy() {
+    if (this._destroyed) {
+      return this;
+    }
+
+    const wrapper = this.getWrapper();
+    const handlers = this._handlers;
+
+    if (wrapper && handlers) {
+      wrapper.removeEventListener('mousedown', handlers.mouseDownTouchStartEvent);
+      wrapper.removeEventListener('touchstart', handlers.mouseDownTouchStartEvent);
+      wrapper.removeEventListener('wheel', handlers.mouseWheelEvent);
+      wrapper.removeEventListener('dblclick', handlers.doubleClickEvent);
+      wrapper.removeEventListener('pointerdown', handlers.pointerDownEvent);
+      wrapper.removeEventListener('pointermove', handlers.pointerMoveEvent);
+
+      ['pointerup', 'pointercancel', 'pointerout', 'pointerleave'].forEach(
+        (event) => {
+          wrapper.removeEventListener(event, handlers.pointerUpEvent);
+        }
+      );
+    }
+
+    if (handlers) {
+      document.removeEventListener('mouseup', handlers.mouseUpTouchEndEvent);
+      document.removeEventListener('touchend', handlers.mouseUpTouchEndEvent);
+      document.removeEventListener('mousemove', handlers.setPositionEvent);
+      document.removeEventListener('touchmove', handlers.setPositionEvent);
+    }
+
+    this._destroyed = true;
+    return this;
   }
 
   // https://stackoverflow.com/questions/8389156/what-substitute-should-we-use-for-layerx-layery-since-they-are-deprecated-in-web
@@ -381,6 +521,32 @@ export default class domPanZoom {
       offsetToCenter.y =
         (wrapper.clientHeight / 2 - offsetToParent.y - window.scrollY) * -1;
     }
+
+    const offsetX = this.x - centerX - offsetToCenter.x;
+    const offsetY = this.y - centerY - offsetToCenter.y;
+
+    return {
+      x: offsetX,
+      y: offsetY
+    };
+  }
+
+  // Get the offset for zooming while keeping a content point fixed on screen
+  getContentPointOffsetToCenter(contentX, contentY) {
+    const wrapper = this.getWrapper();
+    const container = this.getContainer();
+    const diffX = wrapper.clientWidth - container.clientWidth;
+    const diffY = wrapper.clientHeight - container.clientHeight;
+    const centerX = diffX * 0.5;
+    const centerY = diffY * 0.5;
+
+    const pointInWrapperX = container.offsetLeft + contentX;
+    const pointInWrapperY = container.offsetTop + contentY;
+
+    const offsetToCenter = {
+      x: (wrapper.clientWidth / 2 - pointInWrapperX) * -1,
+      y: (wrapper.clientHeight / 2 - pointInWrapperY) * -1
+    };
 
     const offsetX = this.x - centerX - offsetToCenter.x;
     const offsetY = this.y - centerY - offsetToCenter.y;
@@ -516,6 +682,48 @@ export default class domPanZoom {
     return this.zoom;
   }
 
+  // Reset to the initial zoom and pan position
+  reset(arg) {
+    let instant = false;
+    let zoom = this.options.initialZoom;
+    let panX = this.options.initialPanX;
+    let panY = this.options.initialPanY;
+    let useCenter = this.options.center;
+
+    if (typeof arg === 'boolean') {
+      instant = arg;
+    } else if (arg && typeof arg === 'object') {
+      instant = arg.instant === true;
+      if (arg.zoom !== undefined) {
+        zoom = arg.zoom;
+      }
+      if (arg.panX !== undefined) {
+        panX = arg.panX;
+        useCenter = false;
+      }
+      if (arg.panY !== undefined) {
+        panY = arg.panY;
+        useCenter = false;
+      }
+      if (arg.center !== undefined) {
+        useCenter = arg.center;
+      }
+    }
+
+    this.zoom = this.sanitizeZoom(zoom);
+
+    if (useCenter) {
+      this.center(true, true);
+    } else {
+      this.panTo(panX, panY, true, true);
+    }
+
+    this.setPosition(instant);
+    this.fireEvent('onZoom', this.getPosition());
+    this.fireEvent('onPan', this.getPosition());
+    return this;
+  }
+
   // Zoom to
   zoomTo(zoom, instant) {
     // Sanitize zoom
@@ -533,6 +741,30 @@ export default class domPanZoom {
     this.fireEvent('onZoom', this.getPosition());
 
     // Return instance
+    return this;
+  }
+
+  // Zoom to a level while keeping a content point fixed on screen
+  zoomToAt(zoom, point, instant) {
+    zoom = this.sanitizeZoom(zoom);
+
+    const container = this.getContainer();
+    const contentX = point.percent
+      ? (point.x / 100) * container.clientWidth
+      : point.x;
+    const contentY = point.percent
+      ? (point.y / 100) * container.clientHeight
+      : point.y;
+
+    const offsetToCenter = this.getContentPointOffsetToCenter(
+      contentX,
+      contentY
+    );
+    this.adjustPositionByZoom(zoom, offsetToCenter.x, offsetToCenter.y);
+    this.zoom = zoom;
+    this.setPosition(instant);
+
+    this.fireEvent('onZoom', this.getPosition());
     return this;
   }
 
@@ -557,7 +789,7 @@ export default class domPanZoom {
 
     // Calculate nextZoom
     const currentZoom = this.zoom;
-    const zoomStep = (100 + step) / 100;
+    let zoomStep = (100 + step) / 100;
     if (direction === 'out') {
       zoomStep = 1 / zoomStep;
     }
