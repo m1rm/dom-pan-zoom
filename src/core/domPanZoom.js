@@ -559,14 +559,14 @@ export default class domPanZoom {
 
   // Get the distance between two touch events
   getTouchEventsDistance(ev1, ev2) {
-    return Math.abs(Math.hypot(ev1.pageX - ev1.pageX, ev1.pageY - ev2.pageY));
+    return Math.abs(Math.hypot(ev1.pageX - ev2.pageX, ev1.pageY - ev2.pageY));
   }
 
   // Get the center point between two touch events
   getTouchEventsCenter(ev1, ev2) {
     return {
       pageX: (ev1.pageX + ev2.pageX) / 2,
-      pageY: (ev1.pageY + ev2.pageX) / 2,
+      pageY: (ev1.pageY + ev2.pageY) / 2,
       clientX: (ev1.clientX + ev2.clientX) / 2,
       clientY: (ev1.clientY + ev2.clientY) / 2
     };
@@ -902,7 +902,7 @@ export default class domPanZoom {
 
     const container = this.getContainer();
     const panWidth = ((container.clientWidth * step) / 100) * this.zoom;
-    const panHeight = ((container.clientWidth * step) / 100) * this.zoom;
+    const panHeight = ((container.clientHeight * step) / 100) * this.zoom;
 
     direction === 'left' && (this.x += panWidth * -1);
     direction === 'right' && (this.x += panWidth);
