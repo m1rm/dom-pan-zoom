@@ -6,15 +6,13 @@ Notes from a JavaScript best-practices review of dom-pan-zoom (post Phase 1 / sv
 
 ## High priority — bugs & lifecycle
 
-### 1. Fix math typos in touch/pan helpers
+### 1. Fix math typos in touch/pan helpers — DONE
 
-| Location | Current | Likely fix |
-|----------|---------|------------|
+| Location | Was | Fixed to |
+|----------|-----|----------|
 | `getTouchEventsDistance` | `ev1.pageX - ev1.pageX` | `ev1.pageX - ev2.pageX` |
-| `getTouchEventsCenter` | `ev1.pageY + ev2.pageX` | `ev1.pageY + ev2.pageY` (verify) |
-| `pan()` vertical step | uses `container.clientWidth` for height | use `container.clientHeight` |
-
-Pinch zoom and vertical pan may behave incorrectly until these are fixed.
+| `getTouchEventsCenter` | `ev1.pageY + ev2.pageX` | `ev1.pageY + ev2.pageY` |
+| `pan()` vertical step | `container.clientWidth` for height | `container.clientHeight` |
 
 ### 2. Fail fast in the constructor
 
