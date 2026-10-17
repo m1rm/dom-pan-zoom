@@ -97,7 +97,7 @@ export default class domPanZoom {
     this.attachEvents();
 
     // Compute the minimum zoom required by bounds
-    this.adjustMinZoomForBounds();
+    this.updateBoundsMinZoom();
 
     // Set initial zoom
     this.zoom = this.sanitizeZoom(this.options.initialZoom);
@@ -146,7 +146,7 @@ export default class domPanZoom {
 
   // Recalculate the minimum zoom required by bounds, leaving this.options
   // untouched (getMinZoom combines both)
-  adjustMinZoomForBounds() {
+  updateBoundsMinZoom() {
     this.boundsMinZoom = 0;
 
     if (!this.options.bounds) {
@@ -181,7 +181,7 @@ export default class domPanZoom {
   // Recalculate bounds after the wrapper or panZoom element changes size
   resize() {
     const zoom = this.zoom;
-    this.adjustMinZoomForBounds();
+    this.updateBoundsMinZoom();
     this.zoom = this.sanitizeZoom(zoom);
     this.setPosition(true);
     return this;

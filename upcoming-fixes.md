@@ -24,7 +24,7 @@ Document `mousemove` / `touchmove` / `mouseup` / `touchend` / `touchcancel` are 
 
 ### 4. Separate user config from computed state — DONE
 
-`adjustMinZoomForBounds()` now only stores the bounds-derived fit in `boundsMinZoom` instead of mutating `this.options`, so `options.minZoom` / `maxZoom` always hold what the user passed. `getMinZoom()` / `getMaxZoom()` combine options and bounds on read, and `sanitizeZoom()` clamps against them, so changing zoom options at runtime takes effect without `resize()`. The redundant `baseMinZoom` / `baseMaxZoom` copies were removed.
+`updateBoundsMinZoom()` now only stores the bounds-derived fit in `boundsMinZoom` instead of mutating `this.options`, so `options.minZoom` / `maxZoom` always hold what the user passed. `getMinZoom()` / `getMaxZoom()` combine options and bounds on read, and `sanitizeZoom()` clamps against them, so changing zoom options at runtime takes effect without `resize()`. The redundant `baseMinZoom` / `baseMaxZoom` copies were removed.
 
 ---
 
@@ -63,7 +63,7 @@ Clearer as normal `if` statements for readability and debugging.
 
 ### 10. Extract shared bounds / fit math
 
-Fit/contain min-zoom logic appears in `adjustMinZoomForBounds()`, `sanitizeZoom()`, and related clamping in `setPosition()`. A single pure helper (e.g. `computeFitZoom(wrapper, container, mode)`) would reduce drift and is easy to unit test.
+Fit/contain min-zoom logic appears in `updateBoundsMinZoom()`, `sanitizeZoom()`, and related clamping in `setPosition()`. A single pure helper (e.g. `computeFitZoom(wrapper, container, mode)`) would reduce drift and is easy to unit test.
 
 ### 11. Remove or implement `preferPageScroll`
 
