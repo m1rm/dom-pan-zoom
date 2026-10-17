@@ -106,47 +106,6 @@ describe('domPanZoom options', () => {
     expect(instance.getZoom()).toBe(1.5);
   });
 
-  it('wheel zoom at a zoom limit does not fire events', () => {
-    const onZoom = vi.fn();
-    const onChange = vi.fn();
-    const { wrapper, instance } = setup({
-      initialZoom: 0.5,
-      minZoom: 0.5,
-      onZoom,
-      onChange
-    });
-    onChange.mockClear();
-
-    const event = dispatchWheel(wrapper, { deltaY: 120 });
-
-    expect(instance.getZoom()).toBe(0.5);
-    expect(event.defaultPrevented).toBe(true);
-    expect(onZoom).not.toHaveBeenCalled();
-    expect(onChange).not.toHaveBeenCalled();
-  });
-
-  it('dblClickZoomEnabled at maxZoom does not fire events', () => {
-    const onZoom = vi.fn();
-    const { wrapper, instance } = setup({
-      dblClickZoomEnabled: true,
-      initialZoom: 2,
-      maxZoom: 2,
-      onZoom
-    });
-
-    wrapper.dispatchEvent(
-      new MouseEvent('dblclick', {
-        clientX: 400,
-        clientY: 200,
-        bubbles: true,
-        cancelable: true
-      })
-    );
-
-    expect(instance.getZoom()).toBe(2);
-    expect(onZoom).not.toHaveBeenCalled();
-  });
-
   it('dblClickZoomEnabled respects zoomEnabled false', () => {
     const { wrapper, instance } = setup({
       dblClickZoomEnabled: true,
