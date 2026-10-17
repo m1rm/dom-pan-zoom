@@ -105,7 +105,7 @@ You can use the following methods:
 | `.getPanX()` | Returns the current horizontal position. You can pass `true` to get the actual pixel values, e.g. `.getPanX(true)` |
 | `.getPanY()` | Returns the current vertical position. You can pass `true` to get the actual pixel values, e.g. `.getPanY(true)` |
 | `.getZoom()` | Returns the current zoom level |
-| `.getMinZoom()` | Returns the effective minimum zoom. With `bounds: 'contain'` or `'cover'` this can be higher than the `minZoom` option |
+| `.getMinZoom()` | Returns the effective minimum zoom. With `bounds: 'contain'` or `'cover'` this can be higher than the `minZoom` option, but never higher than `maxZoom` |
 | `.getMaxZoom()` | Returns the maximum zoom (the current `maxZoom` option) |
 
 | Setters |  |

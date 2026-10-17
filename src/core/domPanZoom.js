@@ -694,9 +694,13 @@ export default class domPanZoom {
     return this.zoom;
   }
 
-  // Getter for the effective minimum zoom (may be raised by bounds)
+  // Getter for the effective minimum zoom (may be raised by bounds, but
+  // never above maxZoom, which wins when the two conflict)
   getMinZoom() {
-    return Math.max(this.options.minZoom, this.boundsMinZoom);
+    return Math.min(
+      Math.max(this.options.minZoom, this.boundsMinZoom),
+      this.getMaxZoom()
+    );
   }
 
   // Getter for the maximum zoom

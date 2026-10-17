@@ -103,6 +103,17 @@ describe('domPanZoom API', () => {
     expect(instance.options.minZoom).toBe(0.1);
   });
 
+  it('effective minZoom never exceeds maxZoom when bounds need more', () => {
+    const { content, instance } = setup({ bounds: 'cover', maxZoom: 1 });
+
+    setLayoutSize(content, 400, 400);
+    instance.resize();
+
+    expect(instance.getMinZoom()).toBe(1);
+    expect(instance.getMaxZoom()).toBe(1);
+    expect(instance.getZoom()).toBe(instance.getMinZoom());
+  });
+
   it('zoom option changes apply without calling resize', () => {
     const { instance } = setup({ bounds: false, minZoom: 0.1, maxZoom: 10 });
 
