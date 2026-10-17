@@ -96,7 +96,7 @@ export default class domPanZoom {
     // Attach events
     this.attachEvents();
 
-    // Compute effective zoom limits from options and bounds
+    // Compute the minimum zoom required by bounds
     this.adjustMinZoomForBounds();
 
     // Set initial zoom
@@ -144,11 +144,10 @@ export default class domPanZoom {
     this.options[event] && this.options[event].bind(this)(pass);
   }
 
-  // Recalculate the effective zoom limits from bounds and the configured
-  // options, leaving this.options untouched
+  // Recalculate the minimum zoom required by bounds, leaving this.options
+  // untouched (getMinZoom combines both)
   adjustMinZoomForBounds() {
-    this.effectiveMinZoom = this.options.minZoom;
-    this.effectiveMaxZoom = this.options.maxZoom;
+    this.boundsMinZoom = 0;
 
     if (!this.options.bounds) {
       return;
@@ -173,16 +172,9 @@ export default class domPanZoom {
     const minZoomY = maxHeight / panZoomHeight;
 
     if (this.options.bounds == 'cover') {
-      this.effectiveMinZoom = Math.max(
-        this.effectiveMinZoom,
-        minZoomX,
-        minZoomY
-      );
+      this.boundsMinZoom = Math.max(minZoomX, minZoomY);
     } else {
-      this.effectiveMinZoom = Math.max(
-        this.effectiveMinZoom,
-        Math.min(minZoomX, minZoomY)
-      );
+      this.boundsMinZoom = Math.min(minZoomX, minZoomY);
     }
   }
 
@@ -683,13 +675,15 @@ export default class domPanZoom {
     }
 
     // Adjust for minZoom
-    if (zoom < this.effectiveMinZoom) {
-      zoom = this.effectiveMinZoom;
+    const minZoom = this.getMinZoom();
+    if (zoom < minZoom) {
+      zoom = minZoom;
     }
 
     // Adjust for maxZoom
-    if (zoom > this.effectiveMaxZoom) {
-      zoom = this.effectiveMaxZoom;
+    const maxZoom = this.getMaxZoom();
+    if (zoom > maxZoom) {
+      zoom = maxZoom;
     }
 
     return zoom;
@@ -702,12 +696,12 @@ export default class domPanZoom {
 
   // Getter for the effective minimum zoom (may be raised by bounds)
   getMinZoom() {
-    return this.effectiveMinZoom;
+    return Math.max(this.options.minZoom, this.boundsMinZoom);
   }
 
-  // Getter for the effective maximum zoom
+  // Getter for the maximum zoom
   getMaxZoom() {
-    return this.effectiveMaxZoom;
+    return this.options.maxZoom;
   }
 
   // Reset to the initial zoom and pan position

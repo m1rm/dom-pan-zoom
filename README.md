@@ -106,7 +106,7 @@ You can use the following methods:
 | `.getPanY()` | Returns the current vertical position. You can pass `true` to get the actual pixel values, e.g. `.getPanY(true)` |
 | `.getZoom()` | Returns the current zoom level |
 | `.getMinZoom()` | Returns the effective minimum zoom. With `bounds: 'contain'` or `'cover'` this can be higher than the `minZoom` option |
-| `.getMaxZoom()` | Returns the effective maximum zoom |
+| `.getMaxZoom()` | Returns the maximum zoom (the current `maxZoom` option) |
 
 | Setters |  |
 | --- | --- |

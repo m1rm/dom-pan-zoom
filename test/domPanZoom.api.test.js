@@ -93,6 +93,28 @@ describe('domPanZoom API', () => {
     expect(instance.getMaxZoom()).toBe(4);
   });
 
+  it('cover bounds raise the effective minZoom to fill the wrapper', () => {
+    const { content, instance } = setup({ bounds: 'cover', minZoom: 0.1 });
+
+    setLayoutSize(content, 1600, 400);
+    instance.resize();
+
+    expect(instance.getMinZoom()).toBe(1);
+    expect(instance.options.minZoom).toBe(0.1);
+  });
+
+  it('zoom option changes apply without calling resize', () => {
+    const { instance } = setup({ bounds: false, minZoom: 0.1, maxZoom: 10 });
+
+    instance.options.maxZoom = 2;
+    instance.zoomTo(5, true);
+    expect(instance.getZoom()).toBe(2);
+
+    instance.options.minZoom = 0.5;
+    instance.zoomTo(0.2, true);
+    expect(instance.getZoom()).toBe(0.5);
+  });
+
   it('zoomToAt changes zoom while updating the transform', () => {
     const { content, instance } = setup({ initialZoom: 1 });
 

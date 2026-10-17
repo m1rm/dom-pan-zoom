@@ -24,7 +24,7 @@ Document `mousemove` / `touchmove` / `mouseup` / `touchend` / `touchcancel` are 
 
 ### 4. Separate user config from computed state — DONE
 
-`adjustMinZoomForBounds()` now writes `effectiveMinZoom` / `effectiveMaxZoom` instead of mutating `this.options`, so `options.minZoom` / `maxZoom` always hold what the user passed. `sanitizeZoom()` clamps against the effective values, exposed via `getMinZoom()` / `getMaxZoom()`. The redundant `baseMinZoom` / `baseMaxZoom` copies were removed.
+`adjustMinZoomForBounds()` now only stores the bounds-derived fit in `boundsMinZoom` instead of mutating `this.options`, so `options.minZoom` / `maxZoom` always hold what the user passed. `getMinZoom()` / `getMaxZoom()` combine options and bounds on read, and `sanitizeZoom()` clamps against them, so changing zoom options at runtime takes effect without `resize()`. The redundant `baseMinZoom` / `baseMaxZoom` copies were removed.
 
 ---
 
