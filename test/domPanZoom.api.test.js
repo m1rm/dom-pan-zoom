@@ -66,6 +66,33 @@ describe('domPanZoom API', () => {
     expect(getTransform(content)).not.toBeNull();
   });
 
+  it('bounds raise the effective minZoom without mutating options', () => {
+    const { content, instance } = setup({
+      bounds: 'contain',
+      minZoom: 0.1,
+      maxZoom: 5,
+      initialZoom: 1
+    });
+
+    expect(instance.getMinZoom()).toBe(1);
+    expect(instance.getMaxZoom()).toBe(5);
+    expect(instance.options.minZoom).toBe(0.1);
+    expect(instance.options.maxZoom).toBe(5);
+
+    setLayoutSize(content, 1600, 800);
+    instance.resize();
+
+    expect(instance.getMinZoom()).toBe(0.5);
+    expect(instance.options.minZoom).toBe(0.1);
+  });
+
+  it('effective zoom limits match options when bounds are disabled', () => {
+    const { instance } = setup({ bounds: false, minZoom: 0.2, maxZoom: 4 });
+
+    expect(instance.getMinZoom()).toBe(0.2);
+    expect(instance.getMaxZoom()).toBe(4);
+  });
+
   it('zoomToAt changes zoom while updating the transform', () => {
     const { content, instance } = setup({ initialZoom: 1 });
 

@@ -22,11 +22,9 @@ Notes from a JavaScript best-practices review of dom-pan-zoom (post Phase 1 / sv
 
 Document `mousemove` / `touchmove` / `mouseup` / `touchend` / `touchcancel` are attached on pan start and removed on release (and in `destroy()` if a drag is still active).
 
-### 4. Separate user config from computed state
+### 4. Separate user config from computed state — DONE
 
-`adjustMinZoomForBounds()` mutates `this.options.minZoom` / `maxZoom`. That blurs “what the user passed” vs “what bounds math computed”.
-
-**Better:** keep `baseMinZoom` / `baseMaxZoom` (already stored) and use `effectiveMinZoom` / `effectiveMaxZoom` (or recompute in `sanitizeZoom`) without overwriting `this.options`.
+`adjustMinZoomForBounds()` now writes `effectiveMinZoom` / `effectiveMaxZoom` instead of mutating `this.options`, so `options.minZoom` / `maxZoom` always hold what the user passed. `sanitizeZoom()` clamps against the effective values, exposed via `getMinZoom()` / `getMaxZoom()`. The redundant `baseMinZoom` / `baseMaxZoom` copies were removed.
 
 ---
 
@@ -110,7 +108,7 @@ Class is `domPanZoom` (camelCase) rather than conventional `DomPanZoom`. May be 
 1. Fix math typos (#1) — DONE
 2. Constructor validation (#2) — DONE
 3. Document listener scoping (#3) — DONE
-4. Split computed vs user zoom limits (#4)
+4. Split computed vs user zoom limits (#4) — DONE
 5. JSDoc on public API (#12)
 6. `AbortController` refactor (#5)
 7. Remaining consistency items as time allows
