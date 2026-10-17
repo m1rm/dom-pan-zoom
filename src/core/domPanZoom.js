@@ -309,6 +309,11 @@ export default class domPanZoom {
       const deltaAdjustedSpeed = 1 - sign * Math.min(0.25, Math.abs((speed * delta) / 128));
       const nextZoom = this.sanitizeZoom(this.zoom * deltaAdjustedSpeed);
 
+      // Skip when already clamped at a zoom limit
+      if (nextZoom === this.zoom) {
+        return;
+      }
+
       // Get offset to center, then adjust
       const offsetToCenter = this.getEventOffsetToCenter(ev);
       this.adjustPositionByZoom(nextZoom, offsetToCenter.x, offsetToCenter.y);
@@ -334,6 +339,10 @@ export default class domPanZoom {
 
       const zoomStep = (100 + this.options.zoomStep) / 100;
       const nextZoom = this.sanitizeZoom(this.zoom * zoomStep);
+      if (nextZoom === this.zoom) {
+        return;
+      }
+
       const offsetToCenter = this.getEventOffsetToCenter(ev);
       this.adjustPositionByZoom(nextZoom, offsetToCenter.x, offsetToCenter.y);
       this.zoom = nextZoom;
