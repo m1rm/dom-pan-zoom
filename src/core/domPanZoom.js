@@ -75,6 +75,9 @@ export default class domPanZoom {
 
     this.options = Object.assign({}, defaultOptions, options);
 
+    // Minimum zoom required by bounds, computed in adjustMinZoomForBounds()
+    this.boundsMinZoom = 0;
+
     this.init();
   }
 

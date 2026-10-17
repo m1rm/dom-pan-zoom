@@ -114,6 +114,23 @@ describe('domPanZoom API', () => {
     expect(instance.getZoom()).toBe(instance.getMinZoom());
   });
 
+  it('getMinZoom returns the minZoom option before bounds are computed', () => {
+    let minZoomDuringInit;
+    class Probe extends domPanZoom {
+      // attachEvents() runs in init() before adjustMinZoomForBounds()
+      attachEvents() {
+        minZoomDuringInit = this.getMinZoom();
+        super.attachEvents();
+      }
+    }
+
+    const { wrapper, content } = setup();
+    const probe = new Probe({ wrapperElement: wrapper, panZoomElement: content, minZoom: 0.3 });
+    probe.destroy();
+
+    expect(minZoomDuringInit).toBe(0.3);
+  });
+
   it('zoom option changes apply without calling resize', () => {
     const { instance } = setup({ bounds: false, minZoom: 0.1, maxZoom: 10 });
 
